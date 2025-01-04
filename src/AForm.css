@@ -1,0 +1,166 @@
+/* AForm.css */
+
+body {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: linear-gradient(to right, #74ebd5, #acb6e5);
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+.form-container {
+    background: linear-gradient(to bottom right, #ffffff, #e6f7ff);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    max-width: 800px;
+    margin: auto;
+    /* transition: transform 0.3s ease, box-shadow 0.3s ease; */
+}
+
+.form-container:hover {
+    /* transform: scale(1.02); */
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    text-align: center;
+    color: #2a9d8f;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="date"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    background: #f9fcfd;
+    font-size: 1em;
+    transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s ease;
+}
+
+input[type="text"]:hover,
+input[type="email"]:hover,
+input[type="date"]:hover,
+textarea:hover,
+select:hover {
+    transform: scale(1.02);
+    background: #e6f7ff;
+    border-color: #74c69d;
+    box-shadow: 0 0 10px rgba(116, 198, 157, 0.5);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #2a9d8f;
+    box-shadow: 0 0 8px rgba(42, 157, 143, 0.5);
+    outline: none;
+    background: #ffffff;
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.error {
+    color: #e63946;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+button {
+    background: linear-gradient(to right, #2a9d8f, #74c69d);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background 0.3s, transform 0.2s ease;
+    display: inline-block;
+    margin-top: 15px;
+}
+
+button:hover {
+    background: linear-gradient(to right, #74c69d, #2a9d8f);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+    background: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background: linear-gradient(to right, #2a9d8f, #38b2ac);
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+td {
+    font-size: 0.9em;
+    color: #333;
+}
+
+tr:hover {
+    background: #e6f7ff;
+    transition: background 0.3s;
+}
+
+@media (max-width: 600px) {
+    .form-container {
+        padding: 20px;
+    }
+
+    button {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    textarea,
+    select {
+        font-size: 0.9em;
+    }
+}

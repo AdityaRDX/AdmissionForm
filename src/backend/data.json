@@ -1,0 +1,30 @@
+[
+  {
+    "id": 2,
+    "title": "Mr.",
+    "firstName": "Sarvesh",
+    "middleName": "D",
+    "lastName": "Teware",
+    "fullName": "Sarvesh D Teware",
+    "motherName": "dfasd",
+    "gender": "Female",
+    "address": "asdfasdf",
+    "taluka": "ads",
+    "district": "Pune",
+    "pinCode": "123443",
+    "state": "Maharashtra ",
+    "mobileNumber": "9503305066",
+    "emailId": "try.sarvesh@gmail.com",
+    "aadhaarNumber": "123413241234",
+    "dob": "2002-02-19",
+    "age": "22",
+    "religion": "Hindu",
+    "casteCategory": "open",
+    "caste": "uyvyj",
+    "physicallyHandicapped": "Yes",
+    "casteCertificate": "uploads\\8a2894c340da553a29e1afb91f4fa0b1",
+    "marksheet": "uploads\\a64ee179131cd21d8ba816f6ad5d7a40",
+    "photo": "uploads\\fb5004ea4abaa6cc1017da59545ae6ce",
+    "signature": "uploads\\0fef64b19b4869d48083d6c62d4a1d24"
+  }
+]

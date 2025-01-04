@@ -1,0 +1,50 @@
+.records-container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+.record-card {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.record-field {
+    display: grid;
+    grid-template-columns: 150px 1fr; /* Fixed width for key, flexible width for value */
+    grid-gap: 20px; /* Increased space between key and value */
+    margin-bottom: 15px; /* Extra space between fields */
+    align-items: center; /* Ensures vertical alignment */
+}
+
+.field-name {
+    font-weight: bold;
+    color: #555;
+}
+
+.field-value {
+    color: #333;
+    word-break: break-word;
+}
+
+.field-value a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.field-value a:hover {
+    text-decoration: underline;
+}
