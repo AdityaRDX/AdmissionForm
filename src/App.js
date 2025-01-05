@@ -5,16 +5,20 @@ import './App.css';
 import AForm from './Aform';
 import Records from './Records';
 import './App.css';
+import Registration from './Registration';
+import Login from './Login';
 
 
 function App() {
   return (
     <Router>
             <nav>
-                <Link to="/">Home</Link> | <Link to="/records">Show Records</Link>
+                <Link to="/records">Show Records</Link>
             </nav>
             <Routes>
-                <Route path="/" element={<AForm />} />
+                <Route path="/" element={<Registration />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/aform" element={<AForm />} />
                 <Route path="/records" element={<Records />} />
             </Routes>
         </Router>
