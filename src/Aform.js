@@ -2,49 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { saveAs } from 'file-saver';
+import {Link} from 'react-router-dom';
+import Axios from 'axios';
 import Swal from 'sweetalert2';
-import {districtTalukaData} from './districtTalukaData';
+import { districtTalukaData } from './districtTalukaData';
 import './AForm.css';
 
 function AForm() {
     const [records, setRecords] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [talukas, setTalukas] = useState([]);
-    const [titleOptions, setTitleOptions] = useState([]);
-
-    const handleGenderChange = (e) => {
-        const selectedGender = e.target.value;
-        formik.setFieldValue('gender', selectedGender);
-        let titles = [];
-        if (selectedGender === 'Male') {
-          titles = ['Mr.'];
-        } else if (selectedGender === 'Female') {
-          titles = ['Ms.', 'Mrs.'];
-        } else {
-          titles = ['Mx.'];
-        }
-        setTitleOptions(titles);
-        formik.setFieldValue('title', titles[0] || ''); // Set default title
-      };
-
-    // ✅ Handle District Change and Update Taluka Options
-    const handleDistrictChange = (e) => {
-    const selectedDistrict = e.target.value;
-    formik.setFieldValue('district', selectedDistrict);
-    setTalukas(districtTalukaData[selectedDistrict] || []);
-    formik.setFieldValue('taluka', ''); // Reset taluka when district changes
-    };
+    const [titleOptions, setTitleOptions] = useState(['Mr.', 'Ms.', 'Dr.']);
 
     useEffect(() => {
         fetchRecords();
     }, []);
-
-    const fetchRecords = () => {
-        fetch('http://localhost:3000/records')
-            .then((response) => response.json())
-            .then((data) => setRecords(data))
-            .catch((error) => console.error('Error fetching records:', error));
-    };
 
     const formik = useFormik({
         initialValues: {
@@ -59,7 +31,7 @@ function AForm() {
             taluka: '',
             district: '',
             pinCode: '',
-            state: 'Maharastra',
+            state: 'Maharashtra',
             mobileNumber: '',
             emailId: '',
             aadhaarNumber: '',
@@ -84,16 +56,10 @@ function AForm() {
             address: Yup.string().required('Address is required'),
             taluka: Yup.string().required('Taluka is required'),
             district: Yup.string().required('District is required'),
-            pinCode: Yup.string()
-                .matches(/^[0-9]{6}$/, 'Invalid Pin Code')
-                .required('Pin Code is required'),
-            mobileNumber: Yup.string()
-            .matches(/^[6-9]\d{9}$/, 'Must be a valid 10-digit number starting with 6, 7, 8, or 9')
-                .required('Mobile Number is required'),
+            pinCode: Yup.string().matches(/^[0-9]{6}$/, 'Invalid Pin Code').required('Pin Code is required'),
+            mobileNumber: Yup.string().matches(/^[6-9]\d{9}$/, 'Must be a valid 10-digit number starting with 6, 7, 8, or 9').required('Mobile Number is required'),
             emailId: Yup.string().email('Invalid Email Address').required('Email is required'),
-            aadhaarNumber: Yup.string()
-                .matches(/^[0-9]{12}$/, 'Invalid Aadhaar Number')
-                .required('Aadhaar Number is required'),
+            aadhaarNumber: Yup.string().matches(/^[0-9]{12}$/, 'Invalid Aadhaar Number').required('Aadhaar Number is required'),
             dob: Yup.date().required('Date of Birth is required'),
             religion: Yup.string().required('Religion is required'),
             casteCategory: Yup.string().required('Caste Category is required'),
@@ -102,176 +68,121 @@ function AForm() {
             casteCertificate: Yup.mixed().required('Caste certificate is required'),
             marksheet: Yup.mixed().required('Marksheet is required'),
             photo: Yup.mixed().required('Photo is required'),
-            signature: Yup.mixed().required('Signature is required'),
-        }), 
-        onSubmit: (values) => {
-            const formDataToSubmit = new FormData();
+            signature: Yup.mixed().required('Signature is required'),
+        }),
+        onSubmit: async (values) => {
+            const data = new FormData();
             for (const key in values) {
-                formDataToSubmit.append(key, values[key]);
+                if (key === 'casteCertificate' || key === 'marksheet' || key === 'photo' || key === 'signature') {
+                    data.append(key, values[key]);
+                } else {
+                    data.append(key, values[key]);
+                }
             }
-    
-            const url = editingId
-                ? `http://localhost:3000/update/${editingId}`
-                : 'http://localhost:3000/submit';
-    
-            fetch(url, {
-                method: editingId ? 'PUT' : 'POST',
-                body: formDataToSubmit,
-            })
-                .then((response) => response.text())
-                .then((data) => {
-                    // Use SweetAlert for success message
-                    Swal.fire({
-                        title: 'Success!',
-                        text: 'Record added/updated successfully.',
-                        icon: 'success',
-                        confirmButtonText: 'Okay',
-                    }).then(() => {
-                        fetchRecords(); // Refresh the records list
-                        formik.resetForm(); // Reset the form
-                        setEditingId(null); // Clear the editing ID
-                    });
-                })
-                .catch((error) => {
-                    // Use SweetAlert for error message
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'There was an error submitting the form. Please try again.',
-                        icon: 'error',
-                        confirmButtonText: 'Try Again',
-                    });
-                    console.error('Error submitting the form:', error);
-                });
+
+            try {
+                const url = editingId ? `http://localhost:5000/update/${editingId}` : 'http://localhost:5000/submit';
+                const method = editingId ? 'put' : 'post';
+                await Axios[method](url, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+                Swal.fire('Success!', editingId ? 'Record updated successfully!' : 'Form submitted successfully!', 'success');
+                fetchRecords();
+                formik.resetForm();
+                setEditingId(null);
+            } catch (error) {
+                Swal.fire('Error!', 'An error occurred. Please try again.', 'error');
+            }
         },
     });
 
-    useEffect(() => {
-        const { firstName, middleName, lastName } = formik.values;
-        const generatedFullName = `${firstName} ${middleName} ${lastName}`.trim();
-        formik.setFieldValue('fullName', generatedFullName);
-    }, [formik.values.firstName, formik.values.middleName, formik.values.lastName]);
-
-    useEffect(() => {
-        const { dob } = formik.values;
-        if (dob) {
-            const birthDate = new Date(dob);
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age -= 1;
-            }
-            formik.setFieldValue('age', age);
-        } else {
-            formik.setFieldValue('age', '');
+    const fetchRecords = async () => {
+        try {
+            const response = await Axios.get('http://localhost:5000/records');
+            setRecords(response.data);
+        } catch (error) {
+            console.error('Error fetching records:', error);
         }
-    }, [formik.values.dob]);
-
+    };
 
     const handleEdit = (record) => {
-        // Show SweetAlert confirmation before populating the form
-        Swal.fire({
-            title: 'Edit Record',
-            text: `You are about to edit the record for ${record.firstName} ${record.middleName} ${record.lastName}`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Edit',
-            cancelButtonText: 'Cancel',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // If confirmed, populate the form with record data
-                formik.setValues({
-                    title: record.title,
-                    firstName: record.firstName,
-                    middleName: record.middleName,
-                    lastName: record.lastName,
-                    fullName: `${record.firstName} ${record.middleName} ${record.lastName}`, // Automatically generate the full name
-                    motherName: record.motherName,
-                    gender: record.gender,
-                    address: record.address,
-                    taluka: record.taluka,
-                    district: record.district,
-                    pinCode: record.pinCode,
-                    state: record.state,
-                    mobileNumber: record.mobileNumber,
-                    emailId: record.emailId,
-                    aadhaarNumber: record.aadhaarNumber,
-                    dob: record.dob,
-                    age: record.age, // Age should be manually updated on form submission or calculated if needed
-                    religion: record.religion,
-                    casteCategory: record.casteCategory,
-                    caste: record.caste,
-                    physicallyHandicapped: record.physicallyHandicapped,
-                    casteCertificate: record.casteCertificate || null, // Set file field values to null if empty
-                    marksheet: record.marksheet || null,
-                    photo: record.photo || null,
-                    signature: record.signature || null
-                });
-    
-                // Set the editing ID to the current record's ID
-                setEditingId(record.id);
-            }
-        });
+        setEditingId(record.id);
+        formik.setValues(record);
     };
-    
 
-    const handleDelete = (id) => {
-        Swal.fire({
+    const handleDelete = async (id) => {
+        const confirm = await Swal.fire({
             title: 'Are you sure?',
-            text: 'Do you really want to delete this record?',
+            text: "You won't be able to revert this!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, keep it',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Proceed with the delete request
-                fetch(`http://localhost:3000/delete/${id}`, {
-                    method: 'DELETE',
-                })
-                    .then((response) => response.text())
-                    .then((data) => {
-                        Swal.fire({
-                            title: 'Deleted!',
-                            text: 'The record has been deleted successfully.',
-                            icon: 'success',
-                            confirmButtonText: 'OK',
-                        });
-                        fetchRecords(); // Refresh the records list
-                    })
-                    .catch((error) => {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'An error occurred while deleting the record. Please try again later.',
-                            icon: 'error',
-                            confirmButtonText: 'OK',
-                        });
-                        console.error('Error deleting the record:', error);
-                    });
-            }
         });
+
+        if (confirm.isConfirmed) {
+            try {
+                await Axios.delete(`http://localhost:5000/delete/${id}`);
+                Swal.fire('Deleted!', 'The record has been deleted.', 'success');
+                fetchRecords();
+            } catch (error) {
+                Swal.fire('Error!', 'Failed to delete the record.', 'error');
+            }
+        }
     };
 
-    const exportToExcel = () => {
-        fetch('http://localhost:3000/export')
-            .then((response) => response.blob())
-            .then((blob) => {
-                saveAs(blob, 'records.xlsx');
-            })
-            .catch((error) => console.error('Error exporting to Excel:', error));
+    const handleDistrictChange = (e) => {
+        formik.setFieldValue('district', e.target.value);
+        formik.setFieldValue('taluka', '');
+        setTalukas(districtTalukaData[e.target.value] || []);
     };
+
+    const handleGenderChange = (e) => {
+        formik.setFieldValue('gender', e.target.value);
+        formik.setFieldValue('title', e.target.value === 'Male' ? 'Mr.' : e.target.value === 'Female' ? 'Ms.' : '');
+    };
+
+    const calculateAge = (dob) => {
+        const today = new Date();
+        const birthDate = new Date(dob);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDifference = today.getMonth() - birthDate.getMonth();
+        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    useEffect(() => {
+        if (formik.values.dob) {
+            formik.setFieldValue('age', calculateAge(formik.values.dob));
+        }
+        formik.setFieldValue('fullName', `${formik.values.firstName} ${formik.values.middleName} ${formik.values.lastName}`);
+    }, [formik.values.firstName, formik.values.middleName, formik.values.lastName, formik.values.dob]);
+
+    const exportToExcel = async () => {
+        try {
+            const response = await Axios.get('http://localhost:5000/export', { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'records.xlsx');
+            document.body.appendChild(link);
+            link.click();
+        } catch (error) {
+            Swal.fire('Error!', 'Failed to export records.', 'error');
+        }
+    };
+
     return (
         <div className="form-container">
             <h1>Admission Form</h1>
             <form onSubmit={formik.handleSubmit}>
-            <label>Title:</label>
-          <select name="title" value={formik.values.title} onChange={formik.handleChange}>
-            <option value="">Select Title</option>
-            {titleOptions.map((title) => (
-              <option key={title} value={title}>{title}</option>
-            ))}
-          </select>
-          {formik.touched.title && formik.errors.title && <div>{formik.errors.title}</div>}
+                <label>Title:</label>
+                <select name="title" value={formik.values.title} onChange={formik.handleChange}>
+                    <option value="">Select Title</option>
+                    {titleOptions.map((title) => (
+                        <option key={title} value={title}>{title}</option>
+                    ))}
+                </select>
+                {formik.touched.title && formik.errors.title && <div>{formik.errors.title}</div>}
 
                 <label>First Name <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -281,9 +192,7 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.firstName && formik.errors.firstName && (
-                    <div className="error">{formik.errors.firstName}</div>
-                )}
+                {formik.touched.firstName && formik.errors.firstName && <div>{formik.errors.firstName}</div>}
 
                 <label>Middle Name <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -293,9 +202,7 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.middleName && formik.errors.middleName && (
-                    <div className="error">{formik.errors.middleName}</div>
-                )}
+                {formik.touched.middleName && formik.errors.middleName && <div>{formik.errors.middleName}</div>}
 
                 <label>Last Name <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -305,10 +212,7 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.lastName && formik.errors.lastName && (
-                    <div className="error">{formik.errors.lastName}</div>
-                )}
-
+                {formik.touched.lastName && formik.errors.lastName && <div>{formik.errors.lastName}</div>}
                 <label>Full Name </label>
                 <input
                     type="text"
@@ -326,49 +230,44 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.motherName && formik.errors.motherName && <div className="error">{formik.errors.motherName}</div>}
+                {formik.touched.motherName && formik.errors.motherName && <div>{formik.errors.motherName}</div>}
 
-                <label>Gender:</label>
-          <select name="gender" value={formik.values.gender} onChange={handleGenderChange}>
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-          {formik.touched.gender && formik.errors.gender && <div >{formik.errors.gender}</div>}
+                <label>Gender <span style={{ color: 'red' }}>*</span></label>
+                <select name="gender" value={formik.values.gender} onChange={handleGenderChange}>
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+                {formik.touched.gender && formik.errors.gender && <div>{formik.errors.gender}</div>}
 
                 <label>Address <span style={{ color: 'red' }}>*</span></label>
-                <textarea
+                <input
+                    type="text"
                     name="address"
                     value={formik.values.address}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                ></textarea>
-                {formik.touched.address && formik.errors.address && <div className="error">{formik.errors.address}</div>}
+                />
+                {formik.touched.address && formik.errors.address && <div>{formik.errors.address}</div>}
 
-                {/* ✅ District Dropdown */}
-        
-          <label>District:</label>
-          <select name="district" value={formik.values.district} onChange={handleDistrictChange}>
-            <option value="">Select District</option>
-            {Object.keys(districtTalukaData).map((district) => (
-              <option key={district} value={district}>{district}</option>
-            ))}
-          </select>
-          {formik.touched.district && formik.errors.district && <div>{formik.errors.district}</div>}
-        
+                <label>District <span style={{ color: 'red' }}>*</span></label>
+                <select name="district" value={formik.values.district} onChange={handleDistrictChange}>
+                    <option value="">Select District</option>
+                    {Object.keys(districtTalukaData).map((district) => (
+                        <option key={district} value={district}>{district}</option>
+                    ))}
+                </select>
+                {formik.touched.district && formik.errors.district && <div>{formik.errors.district}</div>}
 
-        {/* ✅ Taluka Dropdown */}
-        
-          <label>Taluka:</label>
-          <select name="taluka" value={formik.values.taluka} onChange={formik.handleChange} disabled={!formik.values.district}>
-            <option value="">Select Taluka</option>
-            {talukas.map((taluka) => (
-              <option key={taluka} value={taluka}>{taluka}</option>
-            ))}
-          </select>
-          {formik.touched.taluka && formik.errors.taluka && <div >{formik.errors.taluka}</div>}
-     
+                <label>Taluka <span style={{ color: 'red' }}>*</span></label>
+                <select name="taluka" value={formik.values.taluka} onChange={formik.handleChange}>
+                    <option value="">Select Taluka</option>
+                    {talukas.map((taluka) => (
+                        <option key={taluka} value={taluka}>{taluka}</option>
+                    ))}
+                </select>
+                {formik.touched.taluka && formik.errors.taluka && <div>{formik.errors.taluka}</div>}
 
                 <label>Pin Code <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -378,17 +277,7 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.pinCode && formik.errors.pinCode && <div className="error">{formik.errors.pinCode}</div>}
-
-                <label>State <span style={{ color: 'red' }}>*</span></label>
-                <input
-                    type="text"
-                    name="state"
-                    value={formik.values.state}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur} readOnly
-                />
-                {formik.touched.state && formik.errors.state && <div className="error">{formik.errors.state}</div>}
+                {formik.touched.pinCode && formik.errors.pinCode && <div>{formik.errors.pinCode}</div>}
 
                 <label>Mobile Number <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -398,17 +287,17 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.mobileNumber && formik.errors.mobileNumber && <div className="error">{formik.errors.mobileNumber}</div>}
+                {formik.touched.mobileNumber && formik.errors.mobileNumber && <div>{formik.errors.mobileNumber}</div>}
 
-                <label>Email ID <span style={{ color: 'red' }}>*</span></label>
+                <label>Email <span style={{ color: 'red' }}>*</span></label>
                 <input
-                    type="email"
+                    type="text"
                     name="emailId"
                     value={formik.values.emailId}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.emailId && formik.errors.emailId && <div className="error">{formik.errors.emailId}</div>}
+                {formik.touched.emailId && formik.errors.emailId && <div>{formik.errors.emailId}</div>}
 
                 <label>Aadhaar Number <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -418,7 +307,7 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.aadhaarNumber && formik.errors.aadhaarNumber && <div className="error">{formik.errors.aadhaarNumber}</div>}
+                {formik.touched.aadhaarNumber && formik.errors.aadhaarNumber && <div>{formik.errors.aadhaarNumber}</div>}
 
                 <label>Date of Birth <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -428,15 +317,7 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.dob && formik.errors.dob && <div className="error">{formik.errors.dob}</div>}
-
-                <label>Age</label>
-                <input
-                    type="text"
-                    name="age"
-                    value={formik.values.age}
-                    readOnly
-                />
+                {formik.touched.dob && formik.errors.dob && <div>{formik.errors.dob}</div>}
 
                 <label>Religion <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -446,7 +327,7 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.religion && formik.errors.religion && <div className="error">{formik.errors.religion}</div>}
+                {formik.touched.religion && formik.errors.religion && <div>{formik.errors.religion}</div>}
 
                 <label>Caste Category <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -456,7 +337,7 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.casteCategory && formik.errors.casteCategory && <div className="error">{formik.errors.casteCategory}</div>}
+                {formik.touched.casteCategory && formik.errors.casteCategory && <div>{formik.errors.casteCategory}</div>}
 
                 <label>Caste <span style={{ color: 'red' }}>*</span></label>
                 <input
@@ -466,88 +347,64 @@ function AForm() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                 />
-                {formik.touched.caste && formik.errors.caste && <div className="error">{formik.errors.caste}</div>}
+                {formik.touched.caste && formik.errors.caste && <div>{formik.errors.caste}</div>}
 
                 <label>Physically Handicapped <span style={{ color: 'red' }}>*</span></label>
-                <select
-                    name="physicallyHandicapped"
-                    value={formik.values.physicallyHandicapped}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                >
-                    <option value="">Select</option>
+                <select name="physicallyHandicapped" value={formik.values.physicallyHandicapped} onChange={formik.handleChange}>
+                    <option value="">Select Option</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                 </select>
-                {formik.touched.physicallyHandicapped && formik.errors.physicallyHandicapped && <div className="error">{formik.errors.physicallyHandicapped}</div>}
+                {formik.touched.physicallyHandicapped && formik.errors.physicallyHandicapped && <div>{formik.errors.physicallyHandicapped}</div>}
 
-                <label>Upload Caste Certificate <span style={{ color: 'red' }}>*</span></label>
-                <input
-                    type="file"
-                    name="casteCertificate"
-                    onChange={(event) =>
-                        formik.setFieldValue('casteCertificate', event.currentTarget.files[0])
-                    }
-                />
-                {formik.touched.casteCertificate && formik.errors.casteCertificate && (
-                    <div className="error">{formik.errors.casteCertificate}</div>
-                )}
+                {/* File Uploads */}
+                <label>Caste Certificate <span style={{ color: 'red' }}>*</span></label>
+                <input type="file" name="casteCertificate" onChange={(e) => formik.setFieldValue('casteCertificate', e.target.files[0])} />
+                {formik.touched.casteCertificate && formik.errors.casteCertificate && <div>{formik.errors.casteCertificate}</div>}
 
-                <label>Upload Marksheet <span style={{ color: 'red' }}>*</span></label>
-                <input
-                    type="file"
-                    name="marksheet"
-                    onChange={(event) =>
-                        formik.setFieldValue('marksheet', event.currentTarget.files[0])
-                    }
-                />
-                {formik.touched.marksheet && formik.errors.marksheet && (
-                    <div className="error">{formik.errors.marksheet}</div>
-                )}
+                <label>Marksheet <span style={{ color: 'red' }}>*</span></label>
+                <input type="file" name="marksheet" onChange={(e) => formik.setFieldValue('marksheet', e.target.files[0])} />
+                {formik.touched.marksheet && formik.errors.marksheet && <div>{formik.errors.marksheet}</div>}
 
-                <label>Upload Photo <span style={{ color: 'red' }}>*</span></label>
-                <input
-                    type="file"
-                    name="photo"
-                    onChange={(event) =>
-                        formik.setFieldValue('photo', event.currentTarget.files[0])
-                    }
-                />
-                {formik.touched.photo && formik.errors.photo && (
-                    <div className="error">{formik.errors.photo}</div>
-                )}
+                <label>Photo <span style={{ color: 'red' }}>*</span></label>
+                <input type="file" name="photo" onChange={(e) => formik.setFieldValue('photo', e.target.files[0])} />
+                {formik.touched.photo && formik.errors.photo && <div>{formik.errors.photo}</div>}
 
-                <label>Upload Signature *</label>
-                <input
-                    type="file"
-                    name="signature"
-                    onChange={(event) =>
-                        formik.setFieldValue('signature', event.currentTarget.files[0])
-                    }
-                />
-                {formik.touched.signature && formik.errors.signature && (
-                    <div className="error">{formik.errors.signature}</div>
-                )}
-                <br/>
+                <label>Signature <span style={{ color: 'red' }}>*</span></label>
+                <input type="file" name="signature" onChange={(e) => formik.setFieldValue('signature', e.target.files[0])} />
+                {formik.touched.signature && formik.errors.signature && <div>{formik.errors.signature}</div>}
 
-                <button type="submit">{editingId ? 'Update' : 'Submit'}</button>
-                <br/>
+                <button type="submit">Submit</button>
             </form>
-            <br/>
+
             <button onClick={exportToExcel}>Export to Excel</button>
             <br/>
 
             <h2>Records</h2>
-            
-            <table border="1" width="100%">
+            <div className="records-table">
+            <table border="1">
                 <thead>
                     <tr>
                         <th>Title</th>
+                        <th>First Name</th>
+                        <th>Middle Name</th>
+                        <th>Last Name</th>
                         <th>Full Name</th>
-                        <th>Mother's Name</th>
+                        <th>Mother Name</th>
                         <th>Gender</th>
                         <th>Address</th>
+                        <th>Taluka</th>
+                        <th>District</th>
+                        <th>Pin Code</th>
+                        <th>Mobile Number</th>
+                        <th>Email</th>
+                        <th>Aadhaar Number</th>
+                        <th>Date of Birth</th>
+                        <th>Age</th>
                         <th>Religion</th>
+                        <th>Caste Category</th>
+                        <th>Caste</th>
+                        <th>Physically Handicapped</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -555,19 +412,35 @@ function AForm() {
                     {records.map((record) => (
                         <tr key={record.id}>
                             <td>{record.title}</td>
-                            <td>{`${record.firstName} ${record.middleName} ${record.lastName}`}</td>
+                            <td>{record.firstName}</td>
+                            <td>{record.middleName}</td>
+                            <td>{record.lastName}</td>
+                            <td>{record.fullName}</td>
                             <td>{record.motherName}</td>
                             <td>{record.gender}</td>
                             <td>{record.address}</td>
+                            <td>{record.taluka}</td>
+                            <td>{record.district}</td>
+                            <td>{record.pinCode}</td>
+                            <td>{record.mobileNumber}</td>
+                            <td>{record.emailId}</td>
+                            <td>{record.aadhaarNumber}</td>
+                            <td>{record.dob}</td>
+                            <td>{record.age}</td>
                             <td>{record.religion}</td>
+                            <td>{record.casteCategory}</td>
+                            <td>{record.caste}</td>
+                            <td>{record.physicallyHandicapped}</td>
                             <td>
                                 <button onClick={() => handleEdit(record)}>Edit</button>
-                                <button onClick={() => handleDelete(record.id)}>Delete</button>
+                                <button onClick={() => handleDelete(record._id)}>Delete</button>
+                                <button><Link to="/records">View Records</Link></button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+            </div>
         </div>
     );
 }

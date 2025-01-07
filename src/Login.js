@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Axios from 'axios';
 import Swal from 'sweetalert2'; // Import SweetAlert2
 import './Login.css';
 
@@ -7,6 +8,10 @@ const Login = () => {
   const navigate = useNavigate();
   const [captcha, setCaptcha] = useState('');
   const [enteredCaptcha, setEnteredCaptcha] = useState('');
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: '',
+  });
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
@@ -22,38 +27,35 @@ const Login = () => {
     setCaptcha(captchaString);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const user = JSON.parse(localStorage.getItem('user'));
+  const handleChange = (e) => {
+    setLoginData({ ...loginData, [e.target.name]: e.target.value });
+  };
 
-    if (!user) {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Check if CAPTCHA matches
+    if (enteredCaptcha !== captcha) {
       Swal.fire({
         title: 'Error!',
-        text: 'No registered user found. Please register first.',
+        text: 'Captcha does not match. Please try again.',
         icon: 'error',
         confirmButtonText: 'OK',
       });
       return;
     }
 
-    if (user.email === e.target.username.value && user.password === e.target.password.value && enteredCaptcha === captcha) {
-      Swal.fire({
-        title: 'Success!',
-        text: 'Login successful! Redirecting...',
-        icon: 'success',
-        timer: 2000, // Show for 2 seconds before navigating
-        showConfirmButton: false,
-      }).then(() => {
-        navigate('/aform'); // Redirect to the form page if login is successful
+    try {
+      const response = await Axios.post('http://localhost:5000/login', {
+        email: loginData.email,
+        password: loginData.password,
       });
-    } else {
-      Swal.fire({
-        title: 'Error!',
-        text: 'Invalid credentials or captcha. Please try again.',
-        icon: 'error',
-        confirmButtonText: 'OK',
-      });
-      setShowError(true); // Optional: keep the error state
+
+      Swal.fire('Success!', response.data.message, 'success');
+      // On successful login, redirect to AForm page
+      navigate('/aform');
+    } catch (error) {
+      Swal.fire('Error!', 'Invalid credentials or network issue. Please try again.', 'error');
     }
   };
 
@@ -62,12 +64,26 @@ const Login = () => {
       <h1>Login</h1>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="username">Username(Enter Email ID) *</label>
-          <input type="text" id="username" name="username" required />
+          <label htmlFor="email">Email *</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={loginData.email}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div className="form-group">
           <label htmlFor="password">Password *</label>
-          <input type="password" id="password" name="password" required />
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={loginData.password}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div className="form-group">
           <label htmlFor="captcha">Captcha *</label>
@@ -83,6 +99,11 @@ const Login = () => {
         </div>
         <button type="submit">Login</button>
       </form>
+      {showError && (
+        <div className="error-message">
+          Invalid credentials or CAPTCHA. Please try again.
+        </div>
+      )}
     </div>
   );
 };

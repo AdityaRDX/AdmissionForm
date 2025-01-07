@@ -145,6 +145,13 @@ tr:hover {
     transition: background 0.3s;
 }
 
+/* Scrollable Table Body */
+.records-table {
+    max-height: 300px; /* Adjust the max height as per your needs */
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
 @media (max-width: 600px) {
     .form-container {
         padding: 25px;

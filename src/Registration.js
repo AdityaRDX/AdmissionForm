@@ -44,12 +44,20 @@ const Registration = () => {
         }),
         onSubmit: async (values) => {
             try {
-                const response = await fetch('http://localhost:3000/register', {
+                const formData = new FormData();
+                formData.append('username', values.username);
+                formData.append('firstName', values.firstName);
+                formData.append('middleName', values.middleName);
+                formData.append('lastName', values.lastName);
+                formData.append('mobileNumber', values.mobileNumber);
+                formData.append('email', values.email);
+                formData.append('password', values.password);
+                formData.append('confirmPassword', values.confirmPassword);
+                formData.append('photo', values.photo);
+
+                const response = await fetch('http://localhost:5000/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(values),
+                    body: formData, // Send FormData with file
                 });
 
                 if (response.ok) {
@@ -84,7 +92,7 @@ const Registration = () => {
     return (
         <div className="form-container">
             <h1>Register</h1>
-            <form onSubmit={formik.handleSubmit}>
+            <form onSubmit={formik.handleSubmit} encType="multipart/form-data">
                 <div className="form-group">
                     <label>Username:</label>
                     <input
@@ -150,6 +158,7 @@ const Registration = () => {
                         <div className="error">{formik.errors.mobileNumber}</div>
                     )}
                 </div>
+
                 <div className="form-group">
                     <label htmlFor="photo">Photo *</label>
                     <input
@@ -204,6 +213,7 @@ const Registration = () => {
                         <div className="error">{formik.errors.confirmPassword}</div>
                     )}
                 </div>
+
                 <button type="submit">Register</button>
             </form>
         </div>

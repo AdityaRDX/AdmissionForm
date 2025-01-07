@@ -12,9 +12,7 @@ import Login from './Login';
 function App() {
   return (
     <Router>
-            <nav>
-                <Link to="/records">Show Records</Link>
-            </nav>
+            
             <Routes>
                 <Route path="/" element={<Registration />} />
                 <Route path="/login" element={<Login />} />
